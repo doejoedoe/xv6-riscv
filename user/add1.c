@@ -50,5 +50,6 @@ main(int argc, char *argv[])
   b = atoi(sB);
   result = add(a, b);
   printf("%d\n", result);
+  
   exit(0);
 }
