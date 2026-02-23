@@ -91,7 +91,8 @@ call_atoi:
     call exit
 
 format_error:
-    la a0, err_msg
-    call printf
+    li a0, 2
+    la a1, err_msg
+    call fprintf
     li a0, 1
     call exit

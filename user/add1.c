@@ -1,15 +1,17 @@
 #include "kernel/types.h"
 #include "user/user.h"
 
+#define BUFSIZE 1024
+
 int
 main(int argc, char *argv[])
 {
-  char buf[1025];
+  char buf[BUFSIZE + 1];
   char *s = buf;
   char c;
   uchar i = 0, flagErr = 0, flagEnd = 0, flagSpace = 0, idxSpace = 0;
 
-  while (i < 1024 && !flagEnd && read(0, &c, 1) > 0) {
+  while (i < BUFSIZE && !flagEnd && read(0, &c, 1) > 0) {
     if(c == '\n' || c == '\r') {
       *s++ = '\0';
       flagEnd = 1;
@@ -41,7 +43,7 @@ main(int argc, char *argv[])
 
   buf[idxSpace] = '\0';
   if(!flagEnd) {
-    buf[1024] = '\0';
+    buf[BUFSIZE] = '\0';
   };
 
   int a, b, result;
