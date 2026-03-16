@@ -2,6 +2,19 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 
+long writeAll(int fd, const char* buf, unsigned long len)
+{
+  unsigned long counter = 0, total = 0;
+  while(total < len) {
+    counter = write(fd, buf + total, len - total);
+    if(counter < 0) {
+      return -1;
+    };
+    total += counter;
+  };
+  return total;
+};
+
 int
 main(int argc, char *argv[])
 {
@@ -17,9 +30,11 @@ main(int argc, char *argv[])
       exit(1);
     };
     char newline = '\n';
+    long arglen, total;
     for(int i = 0; i < argc; i++) {
-      if(write(pipefd[1], argv[i], strlen(argv[i])) != strlen(argv[i]) || 
-          write(pipefd[1], &newline, sizeof(newline)) != sizeof(newline)) {
+      arglen = strlen(argv[i]);
+      total = writeAll(pipefd[1], argv[i], arglen);
+      if(total == -1L || total != arglen || writeAll(pipefd[1], &newline, 1) != 1L) {
         fprintf(2, "error while writing to pipefd[1] in parent\n");
         exit(1);
       };

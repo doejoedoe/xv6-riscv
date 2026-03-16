@@ -4,6 +4,19 @@
 #include <string.h>
 #include <sys/wait.h>
 
+long writeAll(int fd, const char* buf, unsigned long len)
+{
+  unsigned long counter = 0, total = 0;
+  while(total < len) {
+    counter = write(fd, buf + total, len - total);
+    if(counter < 0) {
+      return -1;
+    };
+    total += counter;
+  };
+  return total;
+};
+
 int
 main(int argc, char *argv[])
 {
@@ -19,9 +32,11 @@ main(int argc, char *argv[])
       exit(EXIT_FAILURE);
     };
     char newline = '\n';
+    long arglen, total;
     for(int i = 0; i < argc; i++) {
-      if(write(pipefd[1], argv[i], strlen(argv[i])) != strlen(argv[i]) || 
-        write(pipefd[1], &newline, sizeof(newline)) != sizeof(newline)) {
+      arglen = strlen(argv[i]);
+      total = writeAll(pipefd[1], argv[i], arglen);
+      if(total == -1L || total != arglen || writeAll(pipefd[1], &newline, 1) != 1L) {
         perror("error while writing to pipefd[1] in parent");
         exit(EXIT_FAILURE);
       };
@@ -41,19 +56,20 @@ main(int argc, char *argv[])
       exit(EXIT_FAILURE);
     };
     char buf[1024];
-    int readCount = 0, writeCount = 0;
+    long readCount = 0, writeCount = 0;
     while ((readCount = read(pipefd[0], buf, sizeof(buf))) > 0) {
-      if((writeCount = write(STDOUT_FILENO, buf, readCount)) != readCount) {
+      writeCount = writeAll(STDOUT_FILENO, buf, readCount);
+      if(writeCount == -1L || writeCount != readCount) {
         perror("unable to write all bytes to standart output in child");
         exit(EXIT_FAILURE);
       };
     };
-    if(close(pipefd[0])) {
-      perror("unable to close pipefd[0] in child");
+    if(readCount < 0) {
+      perror("unable to read from pipefd[0] in child");
       exit(EXIT_FAILURE);
     };
-    if(readCount == -1) {
-      perror("unable to read from pipefd[0] in child");
+    if(close(pipefd[0])) {
+      perror("unable to close pipefd[0] in child");
       exit(EXIT_FAILURE);
     };
     exit(EXIT_SUCCESS);
