@@ -11,7 +11,9 @@
 #define LIST  4
 #define BACK  5
 
-#define MAXARGS 10
+// avoiding unsafe includes
+#define MAXARGS 32 // MAXARG value in "kernel/param.h"
+#define MAXSIZE 4096 // PGSIZE value in "kernel/riscv.h"
 
 struct cmd {
   int type;
@@ -145,7 +147,7 @@ getcmd(char *buf, int nbuf)
 int
 main(void)
 {
-  static char buf[100];
+  static char buf[MAXARGS * MAXSIZE];
   int fd;
 
   // Ensure that three file descriptors are open.
