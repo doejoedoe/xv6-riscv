@@ -8,3 +8,7 @@ struct sleeplock {
   int pid;           // Process holding lock
 };
 
+struct mutex {
+    struct sleeplock lock;
+    int pid;
+};

@@ -503,3 +503,87 @@ sys_pipe(void)
   }
   return 0;
 }
+
+uint64 
+sys_mutex(void) 
+{
+  struct file *f;
+  int fd;
+
+  f = mutexalloc();
+  if(!f)
+    return -1;
+  
+  fd = fdalloc(f);
+  if(fd < 0) {
+    fileclose(f);
+    return -1;
+  }
+
+  return fd;
+}
+
+uint64
+sys_mutex_lock(void)
+{
+  int fd;
+  struct file *f;
+  struct proc *p;
+
+  argint(0, &fd);
+  if(fd < 0 || fd >= NOFILE)
+    return -1;
+  
+  p = myproc();
+  f = p->ofile[fd];
+  
+  if(!f || f->type != FD_MUTEX)
+    return -1;
+  
+  mutex_lock(f->mutex);
+  return 0;
+}
+
+uint64
+sys_mutex_unlock(void)
+{
+  int fd;
+  struct file *f;
+  struct proc *p;
+  
+  argint(0, &fd);
+  if(fd < 0 || fd >= NOFILE)
+    return -1;
+  
+  p = myproc();
+  f = p->ofile[fd];
+  
+  if(!f || f->type != FD_MUTEX || f->mutex->pid != p->pid)
+    return -1;
+  
+  mutex_unlock(f->mutex);
+  return 0;
+}
+
+uint64
+sys_mutex_close(void)
+{
+  int fd;
+  struct file *f;
+  struct proc *p;
+  
+  argint(0, &fd);
+  if(fd < 0 || fd >= NOFILE)
+    return -1;
+  
+  p = myproc();
+  f = p->ofile[fd];
+  
+  if(!f || f->type != FD_MUTEX)
+    return -1;
+  
+  p->ofile[fd] = 0;
+  fileclose(f);
+  
+  return 0;
+}
