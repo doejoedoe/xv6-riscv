@@ -7,6 +7,7 @@ struct file {
   struct inode *ip;  // FD_INODE and FD_DEVICE
   uint off;          // FD_INODE
   short major;       // FD_DEVICE
+  short minor;
 };
 
 #define major(dev)  ((dev) >> 16 & 0xFFFF)
@@ -38,3 +39,9 @@ struct devsw {
 extern struct devsw devsw[];
 
 #define CONSOLE 1
+#define PSEUDO 2
+
+#define MINOR_NULL 0
+#define MINOR_ZERO 1
+#define MINOR_URANDOM 2
+#define MINOR_NULLSTAT 3
