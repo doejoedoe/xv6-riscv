@@ -503,3 +503,16 @@ sys_pipe(void)
   }
   return 0;
 }
+
+uint64
+sys_rtctime(void)
+{
+  uint64 addr, time;
+
+  argaddr(0, &addr);
+  time = rtctime();
+  
+  if(copyout(myproc()->pagetable, addr, (char*)&time, sizeof(time)) < 0)
+    return -1;
+  return 0;
+}

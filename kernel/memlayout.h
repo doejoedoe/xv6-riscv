@@ -17,6 +17,10 @@
 // end -- start of kernel page allocation area
 // PHYSTOP -- end RAM used by the kernel
 
+#define RTC0 0x101000L
+#define RTC_LOW (RTC0 + 0x0)
+#define RTC_HIGH (RTC0 + 0x4)
+
 // qemu puts UART registers here in physical memory.
 #define UART0 0x10000000L
 #define UART0_IRQ 10
