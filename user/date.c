@@ -14,16 +14,18 @@ int
 get_year(int* days)
 {
   int days_remain = *days;
-  int quarter = 365 * 3 + 366;
-  int year = 1970 + 4 * (days_remain / quarter);
-  days_remain %= quarter;
-
-  int days_in_year;
-  while(days_remain >= (days_in_year = is_leap(year) ? 366 : 365)) {
-    days_remain -= days_in_year;
-    year++;
+  int year = 1970;
+  if (days_remain >= 0) {
+    while (days_remain >= (is_leap(year) ? 366 : 365)) {
+      days_remain -= is_leap(year) ? 366 : 365;
+      year++;
+    }
+  } else {
+    while (days_remain < 0) {
+      year--;
+      days_remain += is_leap(year) ? 366 : 365;
+    }
   }
-
   *days = days_remain;
   return year;
 }
@@ -46,8 +48,13 @@ get_month(int* days, int year) {
 void
 print_date(uint64 nsec) 
 {
-  uint64 sec = nsec / (uint64)1e9;
-  uint32 msec = (nsec % (uint64)1e9) / (uint64)1e6;
+  long sec = (long)nsec / (long)1e9;
+  long snsec_rem = (long)nsec % (long)1e9;
+  if(snsec_rem < 0) {
+    sec--;
+    snsec_rem += (long)1e9;
+  };
+  long msec = snsec_rem / (long)1e6;
 
   int sec_in_minute = 60;
   int sec_in_hour = sec_in_minute * 60;
@@ -55,6 +62,10 @@ print_date(uint64 nsec)
   
   int day = sec / sec_in_day;
   sec %= sec_in_day;
+  if(sec < 0) {
+    day--;
+    sec += sec_in_day;
+  };
 
   int year = get_year(&day);
   int month = get_month(&day, year);
@@ -66,7 +77,7 @@ print_date(uint64 nsec)
   int minute = sec / sec_in_minute;
   sec %= sec_in_minute;
 
-  printf("%d.%d.%d %d:%d:%ld.%d\n", 
+  printf("%d.%d.%d %d:%d:%ld.%ld\n", 
     day, month, year, hour, minute, sec, msec);
 }
 
