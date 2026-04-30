@@ -81,7 +81,9 @@ int nullstatread(uint64 addr, int n) {
   acquire(&nullstat.lock);
   uint64 count = nullstat.bytes_written;
   release(&nullstat.lock);
-  return count;
+  if(copyout(myproc()->pagetable, addr, (char*)&count, sizeof(uint64)) < 0)
+    return -1;
+  return sizeof(uint64);
 }
 
 int nullstatwrite(uint64 addr, int n) {
