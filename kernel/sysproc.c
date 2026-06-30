@@ -138,18 +138,19 @@ sys_ps_listinfo(void)
 
   count = 0;
   for(p = proc; p < &proc[NPROC]; p++) {
+    acquire(&wait_lock);
     acquire(&p->lock);
     if(p->state != UNUSED) {
       count++;
       if(count > lim) {
         release(&p->lock);
+        release(&wait_lock);
         return -2;
       }
       info.pid = p->pid;
       info.state = p->state;
       safestrcpy(info.name, p->name, sizeof(info.name));
 
-      acquire(&wait_lock);
       if(p->parent) {
         info.ppid = p->parent->pid;
         safestrcpy(info.pname, p->parent->name, sizeof(info.pname));
@@ -158,14 +159,15 @@ sys_ps_listinfo(void)
         info.ppid = -1;
         safestrcpy(info.pname, "", sizeof(info.pname));
       }
-      release(&wait_lock);
 
       if(copyout(myproc()->pagetable, (uint64)(plist + count - 1), (char*)&info, sizeof(info)) < 0) {
         release(&p->lock);
+        release(&wait_lock);
         return -3;
       }
     }
     release(&p->lock);
+    release(&wait_lock);
   }
   return count;
 }
