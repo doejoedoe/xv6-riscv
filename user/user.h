@@ -24,6 +24,9 @@ int getpid(void);
 char* sys_sbrk(int,int);
 int pause(int);
 int uptime(void);
+int pgtable(void);
+int clrflg(uint64, uint64, uint);
+int getflg(uint64, uint64, uint);
 
 // ulib.c
 int stat(const char*, struct stat*);
