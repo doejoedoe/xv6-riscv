@@ -13,3 +13,8 @@
 #define MAXPATH      128   // maximum file path name
 #define USERSTACK    1     // user stack pages
 
+
+#define KBPGSIZE 4096
+#define KBPGCOUNT 1
+#define KBSIZE KBPGSIZE * KBPGCOUNT
+

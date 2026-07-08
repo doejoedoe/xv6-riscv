@@ -28,6 +28,9 @@ int mutex(void);
 int mutex_lock(int);
 int mutex_unlock(int);
 int mutex_close(int);
+int dmesg(char*);
+int logon(uint, uint64);
+int logoff(uint);
 
 // ulib.c
 int stat(const char*, struct stat*);

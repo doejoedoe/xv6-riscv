@@ -6,6 +6,7 @@
 #include "proc.h"
 #include "syscall.h"
 #include "defs.h"
+#include "kerbuf.h"
 
 // Fetch the uint64 at addr from the current process.
 int
@@ -105,6 +106,9 @@ extern uint64 sys_mutex(void);
 extern uint64 sys_mutex_lock(void);
 extern uint64 sys_mutex_unlock(void);
 extern uint64 sys_mutex_close(void);
+extern uint64 sys_dmesg(void);
+extern uint64 sys_logon(void);
+extern uint64 sys_logoff(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -134,7 +138,42 @@ static uint64 (*syscalls[])(void) = {
 [SYS_mutex_lock] sys_mutex_lock,
 [SYS_mutex_unlock] sys_mutex_unlock, 
 [SYS_mutex_close] sys_mutex_close,
+[SYS_dmesg]   sys_dmesg,
+[SYS_logon]   sys_logon,
+[SYS_logoff]  sys_logoff
 };
+
+const char*
+get_syscall_name(int num)
+{
+  switch(num) {
+    case SYS_fork:    return "sys_fork";
+    case SYS_exit:    return "sys_exit";
+    case SYS_wait:    return "sys_wait";
+    case SYS_pipe:    return "sys_pipe";
+    case SYS_read:    return "sys_read";
+    case SYS_kill:    return "sys_kill";
+    case SYS_exec:    return "sys_exec";
+    case SYS_fstat:   return "sys_fstat";
+    case SYS_chdir:   return "sys_chdir";
+    case SYS_dup:     return "sys_dup";
+    case SYS_getpid:  return "sys_getpid";
+    case SYS_sbrk:    return "sys_sbrk";
+    case SYS_pause:   return "sys_pause";
+    case SYS_uptime:  return "sys_uptime";
+    case SYS_open:    return "sys_open";
+    case SYS_write:   return "sys_write";
+    case SYS_mknod:   return "sys_mknod";
+    case SYS_unlink:  return "sys_unlink";
+    case SYS_link:    return "sys_link";
+    case SYS_mkdir:   return "sys_mkdir";
+    case SYS_close:   return "sys_close";
+    case SYS_dmesg:   return "sys_dmesg";
+    case SYS_logon:   return "sys_logon";
+    case SYS_logoff:  return "sys_logoff";
+    default:          return "unknown";
+  }
+}
 
 void
 syscall(void)
@@ -143,6 +182,9 @@ syscall(void)
   struct proc *p = myproc();
 
   num = p->trapframe->a7;
+
+  kb_log_event(SYSCALL, p, num, get_syscall_name(num));
+  
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     // Use num to lookup the system call function for num, call it,
     // and store its return value in p->trapframe->a0
