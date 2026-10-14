@@ -50,7 +50,7 @@ void
 mutex_unlock(struct mutex* m) {
   int pid = myproc()->pid;
   if(!m) panic("mutex_unlock: null mutex");
-  if(m->pid != pid) 
+  if(!holdingsleep(&m->lock)) 
     panic("mutex_unlock: not holding mutex");
   m->pid = -1;
   releasesleep(&m->lock);
@@ -61,6 +61,14 @@ mutex_unlock(struct mutex* m) {
 void
 mutexclose(struct mutex* m) {
   if(!m) panic("mutexclose: null mutex");
+
+  acquire(&m->lock.lk);
+  int busy = m->lock.locked;
+  release(&m->lock.lk);
+
+  if(busy)
+    panic("mutexclose: mutex is busy");
+
   kfree(m);
 
   printf("mutexclose on process %d\n", myproc()->pid);

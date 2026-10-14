@@ -1,10 +1,10 @@
+#include <stdarg.h>
 #include "kerbuf.h"
 #include "types.h"
 #include "param.h"
 #include "riscv.h"
 #include "spinlock.h"
 #include "sleeplock.h"
-#include "printf.h"
 #include "proc.h"
 #include "defs.h"
 #include "syscall.h"
