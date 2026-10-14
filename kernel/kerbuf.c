@@ -10,8 +10,9 @@
 #include "syscall.h"
 
 extern struct spinlock wait_lock;
-struct kernel_buffer ker_buf;
 static struct spinlock log_lock;
+static struct spinlock msg_lock;
+struct kernel_buffer ker_buf;
 static uint32 log_events = 0;
 static uint64 tick_duration = 0;
 
@@ -19,6 +20,7 @@ void ker_buf_init()
 {
   initlock(&ker_buf.lock, "ker_buf.lock");
   initlock(&log_lock, "log_lock");
+  initlock(&msg_lock, "msg_lock");
   ker_buf.data[0] = '\n';
   ker_buf.count = 1;
   ker_buf.head = 0;
@@ -82,6 +84,8 @@ void pr_msg(const char *fmt, ...)
   acquire(&tickslock);
   uint ticks_val = ticks;
   release(&tickslock);
+
+  acquire(&msg_lock);
 
   kb_putc('[');
   kb_printint(ticks_val, 10, 0);
@@ -147,6 +151,8 @@ void pr_msg(const char *fmt, ...)
   }
   va_end(ap);
   kb_putc('\n');
+
+  release(&msg_lock);
 }
 
 void kb_timer_tick()
@@ -210,9 +216,12 @@ void kb_log_event(enum events type, ...) {
       acquire(&p->lock);
     pid = p->pid;
     safestrcpy(name, p->name, sizeof(name));
-    if(p->parent){
-      ppid = p->parent->pid;
-      safestrcpy(pname, p->parent->name, sizeof(pname));
+    struct proc *parent = p->parent;
+    if(parent){
+      acquire(&parent->lock);
+      ppid = parent->pid;
+      safestrcpy(pname, parent->name, sizeof(pname));
+      release(&parent->lock);
     }
     if(!held_p)
       release(&p->lock);
@@ -240,9 +249,12 @@ void kb_log_event(enum events type, ...) {
       acquire(&p->lock);
     pid = p->pid;
     safestrcpy(name, p->name, sizeof(name));
-    if(p->parent){
-      ppid = p->parent->pid;
-      safestrcpy(pname, p->parent->name, sizeof(pname));
+    struct proc *parent = p->parent;
+    if(parent){
+      acquire(&parent->lock);
+      ppid = parent->pid;
+      safestrcpy(pname, parent->name, sizeof(pname));
+      release(&parent->lock);
     }
     if(!held_p)
       release(&p->lock);
