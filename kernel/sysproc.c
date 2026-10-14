@@ -130,7 +130,7 @@ sys_ps_listinfo(void)
     count = 0;
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
-      if(p->state != UNUSED) count++;
+      if(p->state != UNUSED && p->state != USED) count++;
       release(&p->lock);
     }
     return count;
@@ -140,7 +140,7 @@ sys_ps_listinfo(void)
   for(p = proc; p < &proc[NPROC]; p++) {
     acquire(&wait_lock);
     acquire(&p->lock);
-    if(p->state != UNUSED) {
+    if(p->state != UNUSED && p->state != USED) {
       count++;
       if(count > lim) {
         release(&p->lock);
@@ -152,8 +152,10 @@ sys_ps_listinfo(void)
       safestrcpy(info.name, p->name, sizeof(info.name));
 
       if(p->parent) {
+        acquire(&p->parent->lock);
         info.ppid = p->parent->pid;
         safestrcpy(info.pname, p->parent->name, sizeof(info.pname));
+        release(&p->parent->lock);
       }
       else {
         info.ppid = -1;
