@@ -151,11 +151,12 @@ sys_ps_listinfo(void)
       info.state = p->state;
       safestrcpy(info.name, p->name, sizeof(info.name));
 
-      if(p->parent) {
-        acquire(&p->parent->lock);
-        info.ppid = p->parent->pid;
-        safestrcpy(info.pname, p->parent->name, sizeof(info.pname));
-        release(&p->parent->lock);
+      struct proc *parent = p->parent;
+      if(parent) {
+        acquire(&parent->lock);
+        info.ppid = parent->pid;
+        safestrcpy(info.pname, parent->name, sizeof(info.pname));
+        release(&parent->lock);
       }
       else {
         info.ppid = -1;
