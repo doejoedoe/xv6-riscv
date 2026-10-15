@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "kerbuf.h"
 
 struct cpu cpus[NCPU];
 
@@ -302,6 +303,8 @@ kfork(void)
   np->state = RUNNABLE;
   release(&np->lock);
 
+  kb_log_event(PROCSTART, np);
+  
   return pid;
 }
 
@@ -340,6 +343,8 @@ kexit(int status)
     }
   }
 
+  kb_log_event(PROCEND, p);
+  
   begin_op();
   iput(p->cwd);
   end_op();

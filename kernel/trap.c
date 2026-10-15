@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "kerbuf.h"
 
 struct spinlock tickslock;
 uint ticks;
@@ -152,8 +153,11 @@ kerneltrap()
   }
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2 && myproc() != 0)
-    yield();
+  if(which_dev == 2 ) {
+    kb_timer_tick();
+    if(myproc() != 0)
+      yield();
+  }
 
   // the yield() may have caused some traps to occur,
   // so restore trap registers for use by kernelvec.S's sepc instruction.
@@ -194,10 +198,13 @@ devintr()
     int irq = plic_claim();
 
     if(irq == UART0_IRQ){
+      kb_log_event(INTERRUPT, irq, "UART0_IRQ", "serial interrupt");
       uartintr();
     } else if(irq == VIRTIO0_IRQ){
+      kb_log_event(INTERRUPT, irq, "VIRTIO0_IRQ", "disc interrupt");
       virtio_disk_intr();
     } else if(irq){
+      kb_log_event(INTERRUPT, irq, "unknown", "unexpected interrupt");
       printf("unexpected interrupt irq=%d\n", irq);
     }
 

@@ -6,6 +6,7 @@
 #include "proc.h"
 #include "defs.h"
 #include "elf.h"
+#include "kerbuf.h"
 
 static int loadseg(pde_t *, uint64, struct inode *, uint, uint);
 
@@ -34,6 +35,8 @@ kexec(char *path, char **argv)
   struct proghdr ph;
   pagetable_t pagetable = 0, oldpagetable;
   struct proc *p = myproc();
+
+  kb_log_event(EXEC, path, p);
 
   begin_op();
 

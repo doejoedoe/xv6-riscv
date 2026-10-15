@@ -24,3 +24,6 @@
 #define SYS_mutex_lock   23
 #define SYS_mutex_unlock 24
 #define SYS_mutex_close  25
+#define SYS_dmesg  26
+#define SYS_logon  27
+#define SYS_logoff 28

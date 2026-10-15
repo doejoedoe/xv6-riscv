@@ -46,3 +46,6 @@ entry("mutex");
 entry("mutex_lock");
 entry("mutex_unlock");
 entry("mutex_close");
+entry("dmesg");
+entry("logon");
+entry("logoff");
